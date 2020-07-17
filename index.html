@@ -1,0 +1,229 @@
+<!DOCTYPE HTML>
+<!--
+	Striped by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Striped by HTML5 UP</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js?lang=python"></script>
+		<link rel="stylesheet" href="assets/css/main.css" />
+	</head>
+	<body class="is-preload">
+
+		<!-- Content -->
+			<div id="content">
+				<div class="inner">
+
+					<!-- Post -->
+						<article class="box post post-excerpt">
+							<header>
+								<!--
+									Note: Titles and subtitles will wrap automatically when necessary, so don't worry
+									if they get too long. You can also remove the <p> entirely if you don't
+									need a subtitle.
+								-->
+								<h2><a href="#">pychatbox : A Python Chat Application</a></h2>
+								<p>Build a Python Chat Room Application!</p>
+							</header>
+
+							<a href="#" class="image featured"><img src="images/server_and_client.PNG" alt="" /></a>
+							<p>
+								Last month I found myself struggling while understanding python sockets. So I decided to
+								make a project to understand it. After trying out basic examples and reading the docs, I 
+								got to making a chat application.
+							</p>
+							<p>Here's the Github link for the repository : <a href="url">pychatbox</a>
+							</p>
+							<p>
+								At first, I wanted to make it a simple terminal based application but after writing some code,
+								it became clear that a terminal won't suffice. I switched to tkinter and ended up making a 
+								GUI for the app. Keep in mind, GUI became a necessity, which is a strange thing for me!
+							</p>
+							<p>
+								<strong>What new are you going to learn?</strong>
+								<p>If you're a newbie like me, there's probably a lot to learn from this project.
+									Here's a list of what you will learn:
+									<li>Sockets</li>
+									<li>Multi-Threaded Programs and solving related problems</li>
+									<li>Securing transmitted data using Crypto</li>
+									<li>Building a tkinter GUI</li>
+									<li>Using Sqlite databases</li>
+								</p>
+								<p>Lot to learn! Let's get going!</p>
+								</p>
+							</p>
+							<p>
+								<h3>Starting out with sockets</h3>
+								<p>
+									For learning the basics of sockets, you can read the docs, or look youtube
+									videos. Basics are very thorughly explained in the internet and I'm going to do
+									no good by reinventing the wheel! But for the sake of completeness, here's a simple
+									server and client sockets code, that does nothing more than saying hello and closing connections.
+									<h4>Simple echo server</h4>
+								<pre class="prettyprint">
+import socket
+
+host = ''
+port = 5555
+
+with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as server_sock:
+
+	server_sock.bind((host,port))  	# bind to a host on some port
+	server_sock.listen()		# listen for incoming connections
+	print("Listening for connections...") 
+	conn, addr = server_sock.accept()  	# create a NEW socket object upon accepting connection with a specifie address
+	
+	with conn:
+		conn.send(b"Welcome, client!")  	# send bytes-like data over the new socket object
+		dataRcvd = conn.recv(1024)  	# recieve data from the client
+		if not dataRcvd:		# tricky part. If no data is recieved close the connection.
+			print("Connection closed by the client")
+			conn.close()
+		else:
+			print(dataRcvd.decode("utf-8"))  	# print the recieved message by decoding it to utf-8
+			conn.close()
+
+								</pre>
+
+								<h3>Simple echo client</h3>
+<pre class="prettyprint">
+import socket
+
+host = ""  	# Enter the host IP address here (IPv4)
+port = 5555		# Anything above 1000 should work fine
+
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
+
+	client_socket.connect((host,port))
+	dataRcvd = client_socket.recv(1024)
+
+	if not dataRcvd:
+		print("Connection closed by the server")
+		client_socket.close()
+	else:
+		print(dataRcvd.decode("utf-8"))
+
+	client_socket.send(b"Hello, server!")
+	client_socket.close()
+</pre>
+								Here's how the server code runs.
+								<a href="#" class="image featured"><img src="images/echo_server.PNG" alt="" /></a>
+								<p> Nice! Now we can go forward and do more complex things with sockets. </p>
+								
+							</p>
+							<p>
+								<h3>Is it hacker-proof?</h3>
+								If you've ever used Wireshark (A network traffic monitoring tool), you'll find out that these messages
+								that we sent using the echo server travel plaintext over the network! This is unacceptable, and we should
+								make our messaging more secure and tamper proof. To do this, we can use two ways of encryption:
+								<li>Symmetric encryption : Share a common key on both sides of the network for locking and unlocking messages</li>
+								<li>Asymmetric encryption : Use SSL/TLS measures to secure socket connections</li>
+								I implemented both in my program, just for the sake of learning. Any one should suffice, but be cautious about
+								the pros and cons.
+							</p>
+							<p><h3>More workers = less work?</h3>
+								Yes, it does mean that work will be distributed, but the total work remains same. 
+								<p>Let's thread everything to make it faster!</p>
+								<p>No! It doesn't work that way. Threading is an optimal solution when you are waiting for
+									some work to finish, while you want to switch to another task. Some people complain about threading
+									in Python to be "bad", but if you code as per the docs, you'll be fine.
+									So again, threading is a nice idea in situations like putting marbles in a jar; more the workers, easier is the task.
+								</p>
+								<h3>An example of how threading can help</h3>
+								Let's bring back our echo server and make a few changes: let's make it listen for client messages endlessly, just like 
+								a normal server would do. Let's define a function 'foo' that'll print 'foo' 5 times and call it after running the while loop
+								for listening for messages from the client.
+<pre class="prettyprint">
+def fooPrint():
+	for _ in range(5):
+		print("foo")
+</pre>
+						and modify the server code to run a while loop infinitely to recieve messages.
+<pre class="prettyprint">
+	with conn:
+		try:
+			while True:
+				dataRcvd = conn.recv(1024)  	# recieve data from the client
+				if not dataRcvd:		# tricky part. If no data is recieved close the connection.
+					print("Connection closed by the client")
+					conn.close()
+				else:
+					time.sleep(0.1)
+		except:
+			print("Connection closed by the client!")
+
+fooPrint()
+</pre>
+							Now we will modify the client code to send messages using a while loop.
+<pre class="prettyprint">
+while True:
+    client_socket.send(b"Hello client!")
+</pre>
+					On running the server code, we see this output:
+					<p>
+						
+					</p>		
+							<a href="#" class="image featured"><img src="images/no_thread.PNG" alt="" /></a>
+							But we can't see the 'foo' printed 5 times (or even a single time). This happens because the function is stuck in the while loop.
+							So the <strong>'main thread'</strong> is busy recieving messages and doesn't reach the foo function. To solve this issue, we
+							can have an alternate thread handle the reception, while the main thread will continue as it should. We can modify the server code as follows:
+<pre class="prettyprint">
+def recvMessages(conn):
+    try:
+        while True:
+            dataRcvd = conn.recv(1024)  	# recieve data from the client
+            if not dataRcvd:		# tricky part. If no data is recieved close the connection.
+                print("Connection closed by the client")
+                conn.close()
+            else:
+                time.sleep(0.1)
+    except:
+        print("Connection closed by the client!")
+</pre>
+Now let's change the code to start a thread for recieving the messages
+<pre class="prettyprint">
+server_sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+server_sock.setblocking(1)
+server_sock.bind((host, port))  	# bind to a host on some port
+server_sock.listen()		# listen for incoming connections
+print("Listening for connections...")
+conn, addr = server_sock.accept()
+
+recvThread = Thread(target=recvMessages,args=(conn,))       # create a thread for the recieve function
+recvThread.start()      # start the thread
+
+fooPrint()
+recvThread.join()       # once the recvMessage function returns, we'll release the thread's allocated sources
+</pre>
+Now when we run this code, we can see that foo prints immediately.
+
+							<a href="#" class="image featured"><img src="images/with_thread.PNG" alt="" /></a>
+							<h3>Managing multiple threads at the same time</h3>
+							<p>
+								If you're looking to develop a program with multiple threads, it is recommended to manage a queue from
+								different threads and have the main thread read the queue every while.
+								
+								Here's how this app manages multiple clients.
+								<a href="#" class="image featured"><img src="images/rough sketch.PNG" alt="" /></a>
+							</p>
+							<br>
+							<p>I'll keep updating this page...</p>
+						</p>
+					</article>
+				</div>
+			</div>
+
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>
